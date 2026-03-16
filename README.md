@@ -86,10 +86,10 @@ This means even if someone wanted to skip the checks, they physically can't. The
 ![Alt text](images/scans_failed.jpg)
 
 ### Inline Vulnerability Annotation
-![Alt text](findings_output.jpg)
+![Alt text](images/findings_output.jpg)
 
 ### Branch Ruleset Settings
-![Alt text](repo_protection.jpg)
+![Alt text](images/repo_protection.jpg)
 
 ---
 
