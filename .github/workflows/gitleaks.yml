@@ -13,12 +13,12 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                 fetch-depth: 0
+                
             - name: Run Gitleaks Action
               uses: gitleaks/gitleaks-action@v2
-              with:
-                args: git --log-opts $(git merge-base origin/main HEAD)..HEAD --report-format sarif --report-path gitleaks.sarif
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
