@@ -1,0 +1,12 @@
+name: Deploy To AWS ECS
+
+on:
+  workflow_call:
+
+jobs:
+  placeholder:
+    name: Coming Soon
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: echo "This workflow is not yet implemented"
