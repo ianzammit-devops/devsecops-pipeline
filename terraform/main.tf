@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "devsecops-pipeline-terraform-state"
+    bucket = "devsecops-pipeline-terraform-state-iz-pipeline"
     key    = "pipeline/terraform.tfstate"
     region = "eu-west-2"
   }
