@@ -30,6 +30,7 @@ jobs:
         run: |
           terraform state rm aws_ecs_task_definition.app 2>/dev/null || true
           terraform state rm aws_ecs_service.app 2>/dev/null || true
+          terraform state rm aws_iam_service_linked_role.ecs 2>/dev/null || true
 
       - name: Terraform Apply (spin up ephemeral container)
         working-directory: terraform
@@ -94,17 +95,16 @@ jobs:
         if: always()
         working-directory: terraform
         run: |
-          # Scale down ECS service to 0 before destroying
           aws ecs update-service \
             --cluster devsecops-pipeline-cluster \
             --service devsecops-pipeline-service \
             --desired-count 0 2>/dev/null || true
 
-          # Wait for tasks to stop
           sleep 30
 
           terraform state rm aws_ecs_task_definition.app 2>/dev/null || true
           terraform state rm aws_ecs_service.app 2>/dev/null || true
+          terraform state rm aws_iam_service_linked_role.ecs 2>/dev/null || true
           terraform init
           terraform destroy -auto-approve
         env:
