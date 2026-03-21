@@ -227,7 +227,7 @@ $users = $db->getUsers();
         <div class="section">
             <div class="section-title"><?php echo $action === 'create' ? 'Create user' : 'Edit user'; ?></div>
             <div class="card">
-                <form method="post" action="?action=<?php echo $action; ?><?php echo $action === 'edit' && $id !== null ? '&id=' . (int) $id : ''; ?>">
+                <form method="post" action="?action=<?php echo htmlentities($action); ?><?php echo $action === 'edit' && $id !== null ? '&id=' . (int) $id : ''; ?>">
                     <div style="display: grid; gap: 0.75rem; max-width: 420px;">
                         <label style="font-size: 0.9rem;">
                             <div style="margin-bottom: 0.25rem;">Name</div>
