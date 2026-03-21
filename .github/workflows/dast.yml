@@ -1,0 +1,60 @@
+name: DAST - ZAP Scan
+
+on:
+  workflow_call:
+
+jobs:
+  dast:
+    name: Run ZAP DAST Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: devsecops-pipeline
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Apply (spin up ephemeral container)
+        working-directory: terraform
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_image_tag: ${{ github.sha }}
+
+      - name: Get App URL
+        id: get-url
+        working-directory: terraform
+        run: echo "APP_URL=$(terraform output -raw app_url)" >> $GITHUB_ENV
+
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ env.APP_URL }}
+          fail_action: true
+
+      - name: Terraform Destroy (tear down ephemeral container)
+        if: always()
+        working-directory: terraform
+        run: terraform destroy -auto-approve
+        env:
+          TF_VAR_image_tag: ${{ github.sha }}

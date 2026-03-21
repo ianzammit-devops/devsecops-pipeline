@@ -1,0 +1,39 @@
+name: Secure CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+
+jobs:
+  secrets-scan:
+    uses: ./.github/workflows/secrets-scan.yml
+    secrets: inherit
+
+  sast:
+    needs: secrets-scan
+    uses: ./.github/workflows/sast.yml
+    secrets: inherit
+
+  dast:
+    needs: sast
+    uses: ./.github/workflows/dast.yml
+    secrets: inherit
+
+  bucket-compliance:
+    needs: dast
+    uses: ./.github/workflows/bucket-compliance.yml
+    secrets: inherit
+
+  deploy:
+    needs: bucket-compliance
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
