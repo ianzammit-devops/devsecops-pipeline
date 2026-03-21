@@ -95,11 +95,18 @@ jobs:
         if: always()
         working-directory: terraform
         run: |
+          # Scale down and delete ECS service explicitly
           aws ecs update-service \
             --cluster devsecops-pipeline-cluster \
             --service devsecops-pipeline-service \
             --desired-count 0 2>/dev/null || true
 
+          aws ecs delete-service \
+            --cluster devsecops-pipeline-cluster \
+            --service devsecops-pipeline-service \
+            --force 2>/dev/null || true
+
+          # Wait for service to be deleted
           sleep 30
 
           terraform state rm aws_ecs_task_definition.app 2>/dev/null || true
