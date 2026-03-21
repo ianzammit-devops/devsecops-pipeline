@@ -34,6 +34,7 @@ data "aws_subnets" "default" {
 resource "aws_ecr_repository" "app" {
   name                 = var.app_name
   image_tag_mutability = "IMMUTABLE"
+  force_delete         = true
 
   image_scanning_configuration {
     scan_on_push = true
@@ -113,10 +114,6 @@ resource "aws_ecs_task_definition" "app" {
   ])
 }
 
-resource "aws_iam_service_linked_role" "ecs" {
-  aws_service_name = "ecs.amazonaws.com"
-}
-
 # ECS Service (ephemeral - spun up for DAST, torn down after)
 resource "aws_ecs_service" "app" {
   name            = "${var.app_name}-service"
@@ -124,8 +121,6 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = 1
   launch_type     = "FARGATE"
-
-  depends_on = [aws_iam_service_linked_role.ecs]
 
   network_configuration {
     subnets          = data.aws_subnets.default.ids
