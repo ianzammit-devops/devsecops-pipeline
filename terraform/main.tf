@@ -2,7 +2,7 @@ terraform {
   backend "s3" {
     bucket = "devsecops-pipeline-terraform-state"
     key    = "pipeline/terraform.tfstate"
-    region = "eu-west-1"
+    region = "eu-west-2"
   }
 
   required_providers {
