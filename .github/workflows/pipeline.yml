@@ -22,6 +22,11 @@ jobs:
     needs: secrets-scan
     uses: ./.github/workflows/sast.yml
     secrets: inherit
+  
+  sca:
+    needs: sast
+    uses: ./.github/workflows/sca.yml
+    secrets: inherit
 
   dast:
     needs: sast

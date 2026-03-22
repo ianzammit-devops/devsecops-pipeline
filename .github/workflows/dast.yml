@@ -90,6 +90,8 @@ jobs:
           target: ${{ env.APP_URL }}
           fail_action: true
           rules_file_name: zap/zap-rules.tsv
+          artifact_name: zap-scan-results
+          format: sarif
 
       - name: Terraform Destroy (tear down ephemeral container)
         if: always()
