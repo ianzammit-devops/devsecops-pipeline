@@ -4,9 +4,22 @@ on:
   workflow_call:
 
 jobs:
-  placeholder:
-    name: Coming Soon
+  bucket-compliance:
+    name: Run Bucket Compliance Check
     runs-on: ubuntu-latest
+
     steps:
-      - name: Placeholder
-        run: echo "This workflow is not yet implemented"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Install dependencies
+        run: pip install boto3 pyyaml
+
+      - name: Run bucket compliance check
+        run: python scripts/check_buckets.py

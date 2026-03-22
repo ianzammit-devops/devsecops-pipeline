@@ -1,0 +1,12 @@
+buckets:
+  - name: devsecops-compliant-bucket-iz
+    region: eu-west-2
+    public_access_blocked: true
+    encryption: true
+    versioning: true
+
+  - name: devsecops-noncompliant-bucket-iz
+    region: eu-west-2
+    public_access_blocked: true
+    encryption: true
+    versioning: true

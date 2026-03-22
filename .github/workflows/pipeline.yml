@@ -29,7 +29,7 @@ jobs:
     secrets: inherit
 
   dast:
-    needs: sast
+    needs: sca
     uses: ./.github/workflows/dast.yml
     secrets: inherit
 
