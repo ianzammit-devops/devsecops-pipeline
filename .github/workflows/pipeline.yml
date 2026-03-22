@@ -14,58 +14,31 @@ permissions:
   security-events: write
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      code: ${{ steps.filter.outputs.code }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            code:
-              - '**'
-              - '!README.md'
-              - '!.github/workflows/pipeline.yml'
-
   secrets-scan:
-    needs: changes
     uses: ./.github/workflows/secrets-scan.yml
     secrets: inherit
 
   sast:
-    needs: [changes, secrets-scan]
-    if: needs.changes.outputs.code == 'true'
+    needs: secrets-scan
     uses: ./.github/workflows/sast.yml
     secrets: inherit
 
   sca:
-    needs: [changes, sast]
-    if: needs.changes.outputs.code == 'true'
+    needs: sast
     uses: ./.github/workflows/sca.yml
     secrets: inherit
 
   dast:
-    needs: [changes, sca]
-    if: needs.changes.outputs.code == 'true'
+    needs: sca
     uses: ./.github/workflows/dast.yml
     secrets: inherit
 
   bucket-compliance:
-    needs: [changes, dast]
-    if: needs.changes.outputs.code == 'true'
+    needs: dast
     uses: ./.github/workflows/bucket-compliance.yml
     secrets: inherit
 
   deploy:
-    needs: [changes, bucket-compliance]
-    if: needs.changes.outputs.code == 'true'
+    needs: bucket-compliance
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
