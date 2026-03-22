@@ -1,12 +1,57 @@
-name: Deploy To AWS ECS
+name: Deploy to AWS
 
 on:
   workflow_call:
 
 jobs:
-  placeholder:
-    name: Coming Soon
+  deploy:
+    name: Deploy to Production ECS
     runs-on: ubuntu-latest
+
     steps:
-      - name: Placeholder
-        run: echo "This workflow is not yet implemented"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image to Prod ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: devsecops-pipeline-prod
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Download existing task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition devsecops-pipeline-prod \
+            --query taskDefinition \
+            > task-definition.json
+
+      - name: Update task definition with new image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: devsecops-pipeline-prod
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: devsecops-pipeline-prod-service
+          cluster: devsecops-pipeline-prod-cluster
+          wait-for-service-stability: true
