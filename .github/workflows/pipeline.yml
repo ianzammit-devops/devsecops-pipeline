@@ -32,6 +32,7 @@ jobs:
               - '**'
               - '!README.md'
               - '!**/README.md'
+              - '!.github/workflows/pipeline.yml'          
 
   secrets-scan:
     needs: changes
