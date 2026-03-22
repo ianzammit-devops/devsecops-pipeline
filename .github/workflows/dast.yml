@@ -84,20 +84,28 @@ jobs:
           echo "APP_URL=http://$PUBLIC_IP" >> $GITHUB_ENV
           echo "App URL: http://$PUBLIC_IP"
 
-      - name: Run ZAP Baseline Scan
+      - name: Run ZAP Baseline Scan (Pull Request)
+        if: github.event_name == 'pull_request'
         uses: zaproxy/action-baseline@v0.14.0
         with:
           target: ${{ env.APP_URL }}
           fail_action: true
           rules_file_name: zap/zap-rules.tsv
           artifact_name: zap-scan-results
-          format: sarif
+
+      - name: Run ZAP Full Scan (Push to Main)
+        if: github.event_name == 'push'
+        uses: zaproxy/action-full-scan@v0.11.0
+        with:
+          target: ${{ env.APP_URL }}
+          fail_action: true
+          rules_file_name: zap/zap-rules.tsv
+          artifact_name: zap-scan-results
 
       - name: Terraform Destroy (tear down ephemeral container)
         if: always()
         working-directory: terraform
         run: |
-          # Scale down and delete ECS service explicitly
           aws ecs update-service \
             --cluster devsecops-pipeline-cluster \
             --service devsecops-pipeline-service \
@@ -108,7 +116,6 @@ jobs:
             --service devsecops-pipeline-service \
             --force 2>/dev/null || true
 
-          # Wait for service to be deleted
           sleep 30
 
           terraform state rm aws_ecs_task_definition.app 2>/dev/null || true
