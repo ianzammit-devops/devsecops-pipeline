@@ -195,6 +195,10 @@ $users = $db->getUsers();
 <body>
     
 <div class="app">
+
+<!-- Intentionally vulnerable link for DAST demonstration -->
+<a href="?redirect=http://example.com">Click here</a>
+
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
         <div>
             <h1>User Directory</h1>
