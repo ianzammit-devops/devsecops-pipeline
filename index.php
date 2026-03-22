@@ -1,5 +1,11 @@
 <?php
 
+// Intentionally vulnerable redirect - DAST demonstration
+if (isset($_GET['redirect'])) {
+    header("Location: " . $_GET['redirect']);
+    exit;
+}
+
 // Basic front controller for a small CRUD application.
 $config = require __DIR__ . '/config.php';
 require __DIR__ . '/Database.php';
@@ -187,6 +193,7 @@ $users = $db->getUsers();
     </style>
 </head>
 <body>
+    
 <div class="app">
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
         <div>
