@@ -92,6 +92,7 @@ jobs:
           fail_action: true
           rules_file_name: zap/zap-rules.tsv
           artifact_name: zap-scan-results
+        continue-on-error: true
 
       - name: Run ZAP Full Scan (Push to Main)
         if: github.event_name == 'push'
@@ -101,6 +102,60 @@ jobs:
           fail_action: true
           rules_file_name: zap/zap-rules.tsv
           artifact_name: zap-scan-results
+        continue-on-error: true
+
+      - name: Convert ZAP JSON report to SARIF
+        if: always()
+        run: |
+          python -c "
+          import json, os
+          if not os.path.exists('report_json.json'):
+              print('No ZAP report found, skipping SARIF conversion')
+              exit(0)
+          with open('report_json.json') as f:
+              data = json.load(f)
+          sarif = {
+            'version': '2.1.0',
+            '\$schema': 'https://json.schemastore.org/sarif-2.1.0.json',
+            'runs': [{
+              'tool': {'driver': {'name': 'OWASP ZAP', 'rules': []}},
+              'results': []
+            }]
+          }
+          for site in data.get('site', []):
+              for alert in site.get('alerts', []):
+                  for instance in alert.get('instances', []):
+                      sarif['runs'][0]['results'].append({
+                          'ruleId': str(alert['pluginid']),
+                          'message': {'text': alert['desc']},
+                          'level': 'warning',
+                          'locations': [{'physicalLocation': {'artifactLocation': {'uri': instance.get('uri', '')}}}]
+                      })
+          with open('zap.sarif', 'w') as f:
+              json.dump(sarif, f, indent=2)
+          print('SARIF conversion complete')
+          "
+
+      - name: Upload ZAP SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: zap.sarif
+
+      - name: Fail pipeline if ZAP found issues
+        if: always()
+        run: |
+          import json, sys
+          with open('report_json.json') as f:
+              data = json.load(f)
+          alerts = []
+          for site in data.get('site', []):
+              alerts.extend(site.get('alerts', []))
+          if alerts:
+              print(f'ZAP found {len(alerts)} alert(s) - failing pipeline')
+              sys.exit(1)
+          print('No ZAP alerts found - pipeline continues')
+        shell: python
 
       - name: Terraform Destroy (tear down ephemeral container)
         if: always()
