@@ -196,10 +196,8 @@ Deploys the application to production ECS only if all previous stages have passe
 
 **Key difference from DAST:** Production infrastructure already exists. Terraform is not used here. The deploy step pushes a new Docker image to the production ECR repository and updates the ECS service with the new image tag.
 
-> Screenshot: Full pipeline passing end to end with all stages green
 ![Alt text](images/end_to_end_pipeline.jpg)
 
-> Screenshot: Live application running in AWS
 ![Alt text](images/application_running_in_ecs.jpg)
 
 ---
