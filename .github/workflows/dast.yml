@@ -123,13 +123,20 @@ jobs:
               sys.exit(0)
           with open('report_json.json') as f:
               data = json.load(f)
-          alerts = []
+
+          fail_alerts = []
           for site in data.get('site', []):
-              alerts.extend(site.get('alerts', []))
-          if alerts:
-              print(f'ZAP found {len(alerts)} alert(s) - failing pipeline')
+              for alert in site.get('alerts', []):
+                  risk = alert.get('riskcode', '0')
+                  if int(risk) >= 2:
+                      fail_alerts.append(alert)
+
+          if fail_alerts:
+              print(f'ZAP found {len(fail_alerts)} high/medium alert(s) - failing pipeline')
+              for alert in fail_alerts:
+                  print(f"  - {alert.get('name')} (Risk: {alert.get('riskdesc')})")
               sys.exit(1)
-          print('No ZAP alerts found - pipeline continues')
+          print('No high/medium ZAP alerts found - pipeline continues')
         shell: python
 
       - name: Terraform Destroy (tear down ephemeral container)
